@@ -40,6 +40,8 @@ func main() {
 		        default:
 		            log.Println(line)
 			}
+			
+			removeExited()
 		}
 	}
 }
