@@ -55,18 +55,17 @@ func main() {
 func startProcess(name string, cmd string, args []string) {
     if existsProcess(name) {
         fmt.Println("Process", name, "already exists.")
-        return
+    } else {
+        log.Println("Starting", name, ":", cmd)
+        processes[name] = &lyprocess { cmd, exec.Command(cmd) }
+
+        go func() {
+            processes[name].Cmd.Run() // Blocking
+            log.Println("Process", name, "has ended.")
+            delete(processes, name)
+            // Todo: add checking for errors
+        }()
     }
-
-    log.Println("Starting", name, ":", cmd)
-    processes[name] = &lyprocess { cmd, exec.Command(cmd) }
-
-    go func() {
-        processes[name].Cmd.Run() // Blocking
-        log.Println("Process", name, "has ended.")
-        delete(processes, name)
-        // Todo: add checking for errors
-    }()
 }
 
 func killProcess(name string) {
