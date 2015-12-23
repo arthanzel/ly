@@ -11,7 +11,7 @@ func removeExited() {
         if v.Cmd.Process != nil {
             fmt.Println(isRunning(v.Cmd.Process.Pid))
         }
-        
+
         if v.Cmd.ProcessState != nil {
             fmt.Println(v.Cmd.ProcessState)
             //delete(processes, k)

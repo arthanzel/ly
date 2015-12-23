@@ -21,6 +21,7 @@ func main() {
 		reader := bufio.NewReader(os.Stdin)
 
 		for {
+            fmt.Print("ly > ")
 			line, _ := reader.ReadString('\n')
 			words := strings.Fields(line)
 
@@ -34,14 +35,19 @@ func main() {
     		        }
     		        startProcess(words[1], words[2], words[2:])
 	            case "kill":
-	                //pCmd.Process.Kill()
+	                if len(words) < 2 {
+                        fmt.Println("Not enough arguments")
+                        break
+                    }
+                    killProcess(words[1])
                 case "list":
                     list()
 		        default:
 		            log.Println(line)
 			}
-			
-			removeExited()
+
+			// removeExited()
+            fmt.Println()
 		}
 	}
 }
@@ -51,14 +57,37 @@ func startProcess(name string, cmd string, args []string) {
         fmt.Println("Process", name, "already exists.")
         return
     }
-    
-    fmt.Println("Starting", name, ":", cmd)
+
+    log.Println("Starting", name, ":", cmd)
     processes[name] = &lyprocess { cmd, exec.Command(cmd) }
-    processes[name].Cmd.Start()
+
+    go func() {
+        processes[name].Cmd.Run() // Blocking
+        log.Println("Process", name, "has ended.")
+        delete(processes, name)
+        // Todo: add checking for errors
+    }()
+}
+
+func killProcess(name string) {
+    if !existsProcess(name) {
+        fmt.Println("Process", name, "does not exist.")
+    } else {
+        log.Println("Killing", name)
+        processes[name].Cmd.Process.Kill()
+    }
 }
 
 func list() {
-    fmt.Println(len(processes), "processes")
+    if len(processes) == 0 {
+        fmt.Println("No processes")
+    } else {
+        fmt.Println(len(processes), "processes:")
+
+        for k, v := range(processes) {
+            fmt.Printf("  %v (%v)\n", k, v.Cmd.Process.Pid)
+        }
+    }
 }
 
 type lyprocess struct {
