@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+    "io"
 	"log"
 	"os"
 	"os/exec"
@@ -16,7 +17,7 @@ func main() {
 
 	if len(args) == 0 {
 		// Start REPL
-		log.Println("Welcome to Ly!")
+		fmt.Println("Welcome to Ly!")
 
 		reader := bufio.NewReader(os.Stdin)
 
@@ -57,11 +58,29 @@ func startProcess(name string, cmd string, args []string) {
         fmt.Println("Process", name, "already exists.")
     } else {
         log.Println("Starting", name, ":", cmd)
-        processes[name] = &lyprocess { cmd, exec.Command(cmd) }
+        processes[name] = newLyprocess(cmd)
 
         go func() {
-            processes[name].Cmd.Run() // Blocking
-            log.Println("Process", name, "has ended.")
+            bufOut := bufio.NewReader(*processes[name].Stdout)
+
+            processes[name].Cmd.Start()
+            // log.Println("Process", name, "has ended.")
+
+            go func() {
+                for {
+                    line, _, err := bufOut.ReadLine()
+                    if err != nil {
+                        log.Println("Readline error:", err)
+                        break
+                    }
+                    log.Println("Result", line)
+                }
+            }()
+
+
+            // for processes[name].Cmd.ProcessStatus
+
+            processes[name].Cmd.Wait()
             delete(processes, name)
             // Todo: add checking for errors
         }()
@@ -93,4 +112,12 @@ type lyprocess struct {
     File string
     //Args []string
     Cmd *exec.Cmd
+    Stdout *io.ReadCloser
+}
+
+func newLyprocess(cmdString string) *lyprocess {
+    ly := &lyprocess { cmdString, exec.Command("bash", "-c", cmdString), nil }
+    stdout, _ := ly.Cmd.StdoutPipe()
+    ly.Stdout = &stdout
+    return ly
 }
