@@ -3,9 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"strings"
     "time"
 )
@@ -26,6 +24,10 @@ func main() {
             fmt.Print("ly > ")
 			line, _ := reader.ReadString('\n')
 			words := strings.Fields(line)
+
+            if len(words) == 0 {
+                continue
+            }
 
 			switch words[0] {
     			case "quit":
@@ -53,8 +55,7 @@ func main() {
                 case "exit":
                     exit()
 		        default:
-                    // todo: usage
-		            log.Println(line)
+                    printUsage()
 			}
 
 			// removeExited()
@@ -148,22 +149,16 @@ func exit() {
     os.Exit(1)
 }
 
-type lyprocess struct {
-    File string
-    Cmd *exec.Cmd
-    Stdout []string
-    Running bool
-}
+func printUsage() {
+    helpStr := `Usage: <operation> [arguments]
+Operations:
+    new <name> <command>    Spawns a new process called <name> by running <command>.
+                            All processes are started in their own shell.
+    kill <name>             Kills a running process by <name>
+    out <name>              Outputs the most recent standard output/error for a process.
+    list                    Lists running processes with their PID and status.
+    exit                    Nicely quits all processes and exists.
+    help                    Prints this help message.`
 
-func newLyprocess(cmdString string) *lyprocess {
-    ly := &lyprocess { cmdString, exec.Command("bash", "-c", cmdString), nil, false }
-    ly.Stdout = make([]string, 0)
-    ly.Cmd.Stdout = ly
-    ly.Cmd.Stderr = ly
-    return ly
-}
-
-func (ly *lyprocess) Write(p []byte) (n int, err error) {
-    ly.Stdout = append(ly.Stdout, parseLines(p)...)
-    return len(p), nil
+    fmt.Println(helpStr)
 }
