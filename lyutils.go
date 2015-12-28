@@ -21,10 +21,11 @@ func parseLines(buffer []byte) []string {
     source := strings.Split(string(buffer), "\n")
     lines := make([]string, 0)
 
+    // todo: this code trims blank lines that are supposed to be there
     for _, l := range(source) {
         trimmed := strings.TrimSpace(l)
         if len(trimmed) > 0 {
-            lines = append(lines, trimmed)
+            lines = append(lines, l)
         }
     }
 

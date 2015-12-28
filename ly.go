@@ -30,8 +30,6 @@ func main() {
             }
 
 			switch words[0] {
-    			case "quit":
-    			    return
     		    case "new":
     		        if len(words) < 3 {
     		            fmt.Println("Not enough arguments")
@@ -58,7 +56,6 @@ func main() {
                     printUsage()
 			}
 
-			// removeExited()
             fmt.Println()
 		}
 	}
@@ -92,14 +89,15 @@ func killProcess(name string) {
 }
 
 func printOut(name string) {
-    // todo: circular array for out to avoid things like startin `yes` whose output crashes ly.
-
     if !processExists(name) {
         fmt.Println("Process", name, "does not exist.")
     } else {
-        for _, line := range(processes[name].Stdout) {
+        // for _, line := range(processes[name].Stdout) {
+        //     fmt.Println(line)
+        // }
+        processes[name].Stdout.Do(func(line interface{}) {
             fmt.Println(line)
-        }
+        })
     }
 }
 
