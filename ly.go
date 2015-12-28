@@ -8,67 +8,79 @@ import (
     "time"
 )
 
+// Maps strings (names) to lyprocesses.
 var processes = make(map[string]*lyprocess)
+
+// Counter of processes that are running.
+// This is NOT the length of the processes map. Some processes may have exited,
+// and thus are not running.
 var nRunning = 0;
 
 func main() {
-	args := os.Args[1:]
+	fmt.Println("Welcome to Ly!")
 
-	if len(args) == 0 {
-		// Start REPL
-		fmt.Println("Welcome to Ly!")
+	reader := bufio.NewReader(os.Stdin)
 
-		reader := bufio.NewReader(os.Stdin)
+	for {
+        // Read and tokenize user input
+        // todo: support command history
+        fmt.Print("ly > ")
+		line, _ := reader.ReadString('\n')
+		words := strings.Fields(line)
 
-		for {
-            fmt.Print("ly > ")
-			line, _ := reader.ReadString('\n')
-			words := strings.Fields(line)
+        // No command given
+        if len(words) == 0 {
+            continue
+        }
 
-            if len(words) == 0 {
-                continue
-            }
-
-			switch words[0] {
-    		    case "new":
-    		        if len(words) < 3 {
-    		            fmt.Println("Not enough arguments")
-    		            break
-    		        }
-    		        startProcess(words[1], words[2], words[2:])
-	            case "kill":
-	                if len(words) < 2 {
-                        fmt.Println("Not enough arguments")
-                        break
-                    }
-                    killProcess(words[1])
-                case "out":
-	                if len(words) < 2 {
-                        fmt.Println("Not enough arguments")
-                        break
-                    }
-                    printOut(words[1])
-                case "list":
-                    list()
-                case "exit":
-                    exit()
-		        default:
-                    printUsage()
-			}
-
-            fmt.Println()
+		switch words[0] {
+		    case "new":
+                // Start a new process
+		        if len(words) < 3 {
+		            fmt.Println("Not enough arguments")
+		            break
+		        }
+		        startProcess(words[1], words[2:]...)
+            case "kill":
+                // Kill an existing process
+                if len(words) < 2 {
+                    fmt.Println("Not enough arguments")
+                    break
+                }
+                killProcess(words[1])
+            case "out":
+                // Print the output of a process
+                if len(words) < 2 {
+                    fmt.Println("Not enough arguments")
+                    break
+                }
+                printOut(words[1])
+            case "in":
+                // Send some input to a process
+                fmt.Println("Not implemented yet")
+            case "list":
+                // List running processes
+                list()
+            case "exit":
+                // Kill all processes and exit
+                exit()
+	        default:
+                printUsage()
 		}
+
+        fmt.Println()
 	}
 }
 
-func startProcess(name string, cmd string, args []string) {
+func startProcess(name string, cmd ...string) {
     if processRunning(name) {
         fmt.Println("Process", name, "is already running.")
         return
     }
 
-    fmt.Println("Starting", name, ":", cmd)
-    processes[name] = newLyprocess(cmd)
+    cmdString := strings.Join(cmd, " ")
+    fmt.Println("Starting", name, ":", cmdString)
+    processes[name] = newLyprocess(cmdString)
 
     go func() {
         processes[name].Running = true

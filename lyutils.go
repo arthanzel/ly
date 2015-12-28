@@ -1,9 +1,7 @@
 package main
 
-import (
-    "strings"
-)
-
+// Returns true if a process by a given name exists. It may have exited, in
+// which case its output is still accessible.
 func processExists(name string) bool {
     _, ok := processes[name]
     return ok
@@ -15,19 +13,4 @@ func processRunning(name string) bool {
     } else {
         return false
     }
-}
-
-func parseLines(buffer []byte) []string {
-    source := strings.Split(string(buffer), "\n")
-    lines := make([]string, 0)
-
-    // todo: this code trims blank lines that are supposed to be there
-    for _, l := range(source) {
-        trimmed := strings.TrimSpace(l)
-        if len(trimmed) > 0 {
-            lines = append(lines, l)
-        }
-    }
-
-    return lines
 }
