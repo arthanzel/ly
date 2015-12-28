@@ -92,9 +92,6 @@ func printOut(name string) {
     if !processExists(name) {
         fmt.Println("Process", name, "does not exist.")
     } else {
-        // for _, line := range(processes[name].Stdout) {
-        //     fmt.Println(line)
-        // }
         processes[name].Stdout.Do(func(line interface{}) {
             fmt.Println(line)
         })
