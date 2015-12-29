@@ -1,7 +1,8 @@
 package main
 
+import "bufio"
+import "fmt"
 import "os/exec"
-import "strings"
 import "time"
 
 // Lyprocess is a structure that wraps an os/exec.Cmd object and provides some
@@ -14,8 +15,8 @@ type lyprocess struct {
 
     // Circular arrays stop programs that create an endless output stream from
     // eating memory.
-    Stdout *CircularArray
-    StdoutLinesRead int
+    Log *CircularArray
+    LogLinesRead int
 }
 
 func newLyprocess(cmdString string) *lyprocess {
@@ -25,33 +26,72 @@ func newLyprocess(cmdString string) *lyprocess {
 
     // Create the Cmd object and wire its standard out and error streams to the
     // Lyprocess object.
+    // todo: Get rid of the shell and parse arguments
     ly.Cmd = exec.Command("bash", "-c", cmdString)
-    ly.Cmd.Stdout = ly
-    ly.Cmd.Stderr = ly
 
     // 300 lines of output seems like a reasonable amount
-    ly.Stdout = NewCircularArray(300)
-    ly.StdoutLinesRead = 0
+    ly.Log = NewCircularArray(300)
+    ly.LogLinesRead = 0
 
     ly.Running = false
 
     return ly
 }
 
-// Write converts the contents of a byte buffer into a set of strings and stores
-// them in the Lyprocess. This method will consume the standard output and error
-// streams of running processes.
-func (ly *lyprocess) Write(buffer []byte) (n int, err error) {
-    // Split the byte stream into a list of lines. Remove the last blank line.
-    lines := strings.Split(string(buffer), "\n")
-    lines = lines[0:len(lines) - 1]
-
-    timeString := time.Now().Format("15:04:05.000 :: ")
-
-    for _, line := range(lines) {
-        ly.Stdout.Insert(timeString + line)
+func (ly *lyprocess) Run() {
+    // Wire the stdout/error to buffers.
+    // The buffers will concurrently read from the stream and add output and
+    // error lines to the process's log.
+    stdoutFile, stdoutErr := ly.Cmd.StdoutPipe()
+    stderrFile, stderrErr := ly.Cmd.StderrPipe()
+    if stdoutErr != nil || stderrErr != nil {
+        fmt.Println("Couldn't start the process. Standard out/err streams are misbehaving.")
     }
 
-    // All of the lines were read without errors.
-    return len(buffer), nil
+    stdoutBuffer := bufio.NewReader(stdoutFile)
+    go func() {
+        for {
+            line, _, err := stdoutBuffer.ReadLine()
+            if err != nil {
+                // EOF or closed pipe.
+                // Error indicates that the process has exited.
+                break
+            }
+            ly.WriteLine(string(line))
+        }
+    }()
+
+    stderrBuffer := bufio.NewReader(stderrFile)
+    go func() {
+        for {
+            line, _, err := stderrBuffer.ReadLine()
+            if err != nil {
+                break
+            }
+            ly.WriteErrorLine(string(line))
+        }
+    }()
+
+    ly.Cmd.Run()
+}
+
+// PrintLog prints out the process's log of outputs and errors.
+func (ly *lyprocess) PrintLog() {
+    ly.Log.Do(func(line interface{}) {
+        fmt.Println(line)
+    })
+}
+
+// WriteLine adds a timestamped line of text to the process's output/error log.
+func (ly *lyprocess) WriteLine(line string) {
+    timeString := time.Now().Format("15:04:05.000 :: ")
+    ly.Log.Insert(timeString + line)
+}
+
+// WriteErrorLine adds a timestamped line of text to the process's output/error
+// log and marks it with the colour red to indicate an error.
+func (ly *lyprocess) WriteErrorLine(line string) {
+    // todo: error lines should be written in red
+    timeString := time.Now().Format("15:04:05.000 :: ")
+    ly.Log.Insert(timeString + line)
 }

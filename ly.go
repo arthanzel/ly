@@ -3,7 +3,6 @@ package main
 // todo: add color printing
 // todo: old lines in stdout/err should be greyed out
 // todo: add input command
-// todo: fix weird printing of processes
 
 import (
 	"bufio"
@@ -90,7 +89,7 @@ func startProcess(name string, cmd ...string) {
     go func() {
         processes[name].Running = true
         nRunning++
-        processes[name].Cmd.Run()
+        processes[name].Run()
         processes[name].Running = false
         nRunning--
         // Todo: add checking for errors
@@ -109,9 +108,7 @@ func printOut(name string) {
     if !processExists(name) {
         fmt.Println("Process", name, "does not exist.")
     } else {
-        processes[name].Stdout.Do(func(line interface{}) {
-            fmt.Println(line)
-        })
+        processes[name].PrintLog()
     }
 }
 
