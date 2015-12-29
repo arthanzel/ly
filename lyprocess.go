@@ -30,7 +30,6 @@ func newLyprocess(cmdString string) *lyprocess {
 
     // Create the Cmd object and wire its standard out and error streams to the
     // Lyprocess object.
-    // todo: Get rid of the shell and parse arguments
     ly.Cmd = exec.Command("bash", "-c", cmdString)
 
     // 300 lines of output seems like a reasonable amount

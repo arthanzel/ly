@@ -1,7 +1,10 @@
 package main
 
-// todo: old lines in stdout/err should be greyed out
+// todo: add process error checking
+// todo: add check for invalid command
+// todo: add arg parsing!!
 // todo: add input command
+// todo: command history with arrow keys
 
 import (
 	"bufio"
@@ -26,7 +29,6 @@ func main() {
 
 	for {
         // Read and tokenize user input
-        // todo: support command history
         fmt.Print("ly > ")
 		line, _ := reader.ReadString('\n')
 		words := strings.Fields(line)
@@ -94,7 +96,6 @@ func startProcess(name string, cmd ...string) {
         processes[name].Run()
         processes[name].Running = false
         nRunning--
-        // Todo: add checking for errors
     }()
 }
 
