@@ -14,3 +14,10 @@ func processRunning(name string) bool {
         return false
     }
 }
+
+func intmin(a int, b int) int {
+    if a <= b {
+        return a
+    }
+    return b
+}

@@ -5,9 +5,9 @@ import (
     "fmt"
     "os/exec"
     "time"
-
-    "github.com/fatih/color"
 )
+
+const LOG_LENGTH = 300
 
 // Lyprocess is a structure that wraps an os/exec.Cmd object and provides some
 // extra information for Ly's convenience. Ly will usually interact through a
@@ -20,7 +20,7 @@ type lyprocess struct {
     // Circular arrays stop programs that create an endless output stream from
     // eating memory.
     Log *CircularArray
-    LogLinesRead int
+    UnreadLogLines int
 }
 
 func newLyprocess(cmdString string) *lyprocess {
@@ -34,8 +34,8 @@ func newLyprocess(cmdString string) *lyprocess {
     ly.Cmd = exec.Command("bash", "-c", cmdString)
 
     // 300 lines of output seems like a reasonable amount
-    ly.Log = NewCircularArray(300)
-    ly.LogLinesRead = 0
+    ly.Log = NewCircularArray(LOG_LENGTH)
+    ly.UnreadLogLines = 0
 
     ly.Running = false
 
@@ -81,21 +81,27 @@ func (ly *lyprocess) Run() {
 
 // PrintLog prints out the process's log of outputs and errors.
 func (ly *lyprocess) PrintLog() {
-    ly.Log.Do(func(line interface{}) {
-        fmt.Println(line)
+    ly.Log.Do(func(i int, line interface{}) {
+        if i < ly.Log.Length - ly.UnreadLogLines {
+            fmt.Println(greyString(line.(string)))
+        } else {
+            fmt.Println(line)
+        }
     })
+    ly.UnreadLogLines = 0
 }
 
 // WriteLine adds a timestamped line of text to the process's output/error log.
 func (ly *lyprocess) WriteLine(line string) {
     timeString := time.Now().Format("15:04:05.000 :: ")
     ly.Log.Insert(timeString + line)
+    ly.UnreadLogLines = intmin(ly.UnreadLogLines + 1, LOG_LENGTH)
 }
 
 // WriteErrorLine adds a timestamped line of text to the process's output/error
 // log and marks it with the colour red to indicate an error.
 func (ly *lyprocess) WriteErrorLine(line string) {
-    // todo: error lines should be written in red
     timeString := time.Now().Format("15:04:05.000 :: ")
-    ly.Log.Insert(timeString + color.RedString(line))
+    ly.Log.Insert(timeString + redString(line))
+    ly.UnreadLogLines = intmin(ly.UnreadLogLines + 1, LOG_LENGTH)
 }
