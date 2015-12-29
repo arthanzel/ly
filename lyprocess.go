@@ -2,6 +2,7 @@ package main
 
 import "os/exec"
 import "strings"
+import "time"
 
 // Lyprocess is a structure that wraps an os/exec.Cmd object and provides some
 // extra information for Ly's convenience. Ly will usually interact through a
@@ -14,6 +15,7 @@ type lyprocess struct {
     // Circular arrays stop programs that create an endless output stream from
     // eating memory.
     Stdout *CircularArray
+    StdoutLinesRead int
 }
 
 func newLyprocess(cmdString string) *lyprocess {
@@ -29,6 +31,7 @@ func newLyprocess(cmdString string) *lyprocess {
 
     // 300 lines of output seems like a reasonable amount
     ly.Stdout = NewCircularArray(300)
+    ly.StdoutLinesRead = 0
 
     ly.Running = false
 
@@ -43,8 +46,10 @@ func (ly *lyprocess) Write(buffer []byte) (n int, err error) {
     lines := strings.Split(string(buffer), "\n")
     lines = lines[0:len(lines) - 1]
 
+    timeString := time.Now().Format("15:04:05.000 :: ")
+
     for _, line := range(lines) {
-        ly.Stdout.Insert(line)
+        ly.Stdout.Insert(timeString + line)
     }
 
     // All of the lines were read without errors.
