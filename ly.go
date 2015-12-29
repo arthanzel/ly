@@ -5,6 +5,7 @@ package main
 // todo: add arg parsing!!
 // todo: add input command
 // todo: command history with arrow keys
+// todo: add support for lyfiles
 
 import (
 	"bufio"
