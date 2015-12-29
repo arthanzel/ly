@@ -41,27 +41,30 @@ func main() {
 		    case "new":
                 // Start a new process
 		        if len(words) < 3 {
-		            fmt.Println("Not enough arguments")
+		            fmt.Println("Not enough arguments.")
 		            break
 		        }
 		        startProcess(words[1], words[2:]...)
             case "kill":
                 // Kill an existing process
                 if len(words) < 2 {
-                    fmt.Println("Not enough arguments")
+                    fmt.Println("Not enough arguments.")
                     break
                 }
                 killProcess(words[1])
+            case "killall":
+                fmt.Println("Attempting to kill all processes.")
+                killAllProcesses()
             case "out":
                 // Print the output of a process
                 if len(words) < 2 {
-                    fmt.Println("Not enough arguments")
+                    fmt.Println("Not enough arguments.")
                     break
                 }
                 printOut(words[1])
             case "in":
                 // Send some input to a process
-                fmt.Println("Not implemented yet")
+                fmt.Println("Not implemented yet.")
             case "list":
                 // List running processes
                 list()
@@ -83,7 +86,7 @@ func startProcess(name string, cmd ...string) {
     }
 
     cmdString := strings.Join(cmd, " ")
-    fmt.Println("Starting", name, ":", cmdString)
+    fmt.Printf("Starting %s :: %s.", name, cmdString)
     processes[name] = newLyprocess(cmdString)
 
     go func() {
@@ -93,6 +96,14 @@ func startProcess(name string, cmd ...string) {
         processes[name].Running = false
         nRunning--
         // Todo: add checking for errors
+    }()
+}
+
+func killAllProcesses() {
+    go func() {
+        for k, _ := range(processes) {
+            killProcess(k)
+        }
     }()
 }
 
@@ -131,11 +142,7 @@ func list() {
 
 func exit() {
     // Try to kill all processes for 3 seconds, then exit forcefully.
-    go func() {
-        for k, _ := range(processes) {
-            killProcess(k)
-        }
-    }()
+    killAllProcesses()
 
     // Try to exit for 3000 ms if no processes are running
     for t := 0; t < 3000; {
@@ -164,6 +171,7 @@ Operations:
     new <name> <command>    Spawns a new process called <name> by running <command>.
                             All processes are started in their own shell.
     kill <name>             Kills a running process by <name>
+    killall                 Attempts to kill all running processes.
     out <name>              Outputs the most recent standard output/error for a process.
     list                    Lists running processes with their PID and status.
     exit                    Nicely quits all processes and exists.
