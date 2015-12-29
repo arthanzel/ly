@@ -17,7 +17,7 @@ var processes = make(map[string]*lyprocess)
 var nRunning = 0;
 
 func main() {
-	fmt.Println("Welcome to Ly!")
+	fmt.Println("Welcome to Ly! Type 'help' if you're lost.")
 
 	reader := bufio.NewReader(os.Stdin)
 

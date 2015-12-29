@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ly</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700|Bree+Serif' rel='stylesheet' type='text/css'>
+
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        // Insert a target="_blank" into all links to save typing.
+        $("a").attr("target", "_blank");
+    });
+    </script>
+
+    <style>
+        body {
+            background-color: #e8e8e8;
+            font: 16px "Open Sans", Helvetica, Arial, sans-serif;
+            padding-bottom: 20px;
+        }
+
+        p {
+            line-height: 160%;
+        }
+
+        a {
+            color: #595;
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+
+        code, .code , pre{
+            background: white;
+            border: 1px solid #595;
+            font: 14px monospace;
+            padding: 5px 7px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            white-space: -moz-pre-wrap;
+            white-space: -pre-wrap;
+            white-space: -o-pre-wrap;
+            word-wrap: break-word;
+        }
+
+        code {
+            padding: 1px 2px;
+        }
+
+        h1 {
+            color: #696;
+            font: bold 100px "Bree Serif", Helvetica, Arial, sans-serif;
+            margin: 15px 0px;
+            text-align: center;
+            text-shadow: 3px 3px 5px #353;
+        }
+
+        h2 {
+            color: #696;
+            font: 26px "Open Sans", Helvetica, Arial, sans-serif;
+            text-align: center;
+        }
+
+        strong {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .wrapper {
+            margin: auto;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .red {
+            color: #a00;
+        }
+        .yellow {
+            color: #aa0;
+        }
+        .grey {
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <!-- Github banner -->
+    <a href="https://github.com/arthanzel/ly"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+
+    <!-- Content -->
+    <div class="wrapper">
+        <h1>Ly</h1>
+        <h2>The easy-peasy command runner for code big and small.</h2>
+
+        <p><b>Install with <a href="http://golang.org">Go</a>:</b></p>
+        <pre>$ go install github.com/arthanzel/ly</pre>
+
+        <p>Run with:</p>
+        <pre>$ ly
+Welcome to Ly!
+ly ></pre>
+
+        <p>Check it on <a href="https://github.com/arthanzel/ly">Github</a>.</p>
+
+        <h2>What is?</h2>
+
+        <p><strong>Ly</strong> is a tool inspired by the likes of Ruby's <a href="http://godrb.com/">God</a> and <a href="https://github.com/bluepill-rb/bluepill">Bluepill</a>. Its goal it to make it trivial to run and keep an eye on running processes.</p>
+        <p>The "killer use case" of <strong>Ly</strong> is running compilers, preprocessors, or servers in a single shell while working on a project. This comes in handy especially if you don't have an IDE to compile assets for you. <strong>Ly</strong> lets you run instances of, let's say, <a href="http://haml.info">Haml</a>, <a href="http://sass-lang.com">Sass</a>, <a href="http://coffeescript.org">Coffeescript</a> and <a href="http://www.eclipse.org/jetty/">Jetty</a>, all without opening a single extra shell or running any commands in the background that hijack your shell's <code>stdout</code> and may turn into zombie processes. Of course, <strong>Ly</strong> isn't limited to these tools.</p>
+        <p><strong>Ly</strong> doesn't use big configuration files or a complex DSL. Rather, the <code>ly</code> program provides a single REPL environment where you can issue commands and monitor processes. It's simple, lightweight, doesn't pollute your code with more config files, and the learning curve is about 15 seconds long.</p>
+
+        <h2>How-to</h2>
+
+        <p>Running <code>ly</code> gives you a wonderful REPL:</p>
+        <pre>$ ly
+Welcome to Ly!
+ly ></pre>
+        <p>Use the <code>help</code> command to print a wonderful help text:</p>
+        <pre>ly > help</pre>
+
+        <p>Start a new process called "sass-watcher" with the <code>new</code> operation:</p>
+        <pre>ly > new sass-watcher sass --watch assets/scss:public/css</pre>
+
+        <p>Kill processes with the <code>kill</code>operation.</p>
+        <pre>ly > kill sass-watcher</pre>
+
+        <p>List all processes started with <strong>Ly</strong> with <code>list</code>. This command will show the names of all processes, their PIDs, and if it has printed any messages to <code>stdout</code> or <code>stderr</code> since the last time you checked its output.</p>
+        <pre>ly > list
+2 processes
+sass-watcher(12345)  <span class="yellow">2 new messages</span>
+coffee-watcher(67890) -- Exited <span class="yellow">12 new messages</span></pre>
+
+        <p>Check the output of a process with the <code>out</code> operation. All entries are timestamped. White lines represent the standard output, and red lines represent the standard error. Lines that you have already seen by calling <code>out</code> are greyed out.</p>
+        <pre>ly > out sass-watcher
+<span class="grey">15:13:32 :: some old message</span>
+15:21:03 :: some standard output
+15:21:04 :: <span class="red">some standard error</span></pre>
+
+        <p>Processes that have been killed or have exited will still have their standard output and error streams accessible using <code>out</code>.</p>
+
+        <p>You can also write to a process's standard input using the <code>in</code> operation:</p>
+        <pre>ly > in sass-watcher some input</pre>
+
+        <p><code>exit</code> will attempt to close all running processes. When all processes have been closed, <strong>Ly</strong> will exit on its own. If some processes refuse to exit, <strong>Ly</strong> will inform you, then exit.</p>
+        <pre>ly > exit</pre>
+
+        <h2>Please use</h2>
+        <p><strong>Ly</strong> is released under the MIT license. You can use it in your own code and even sell said code provided that you retain the MIT license with <strong>Ly</strong>, including the appropriate copyright. Don't claim credit for <strong>Ly</strong>, or hold the author responsible if it does something unspeakable like eat your cat.</p>
+    </div>
+</body>
+</html>
