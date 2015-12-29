@@ -1,6 +1,5 @@
 package main
 
-// todo: add color printing
 // todo: old lines in stdout/err should be greyed out
 // todo: add input command
 

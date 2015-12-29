@@ -1,9 +1,13 @@
 package main
 
-import "bufio"
-import "fmt"
-import "os/exec"
-import "time"
+import (
+    "bufio"
+    "fmt"
+    "os/exec"
+    "time"
+
+    "github.com/fatih/color"
+)
 
 // Lyprocess is a structure that wraps an os/exec.Cmd object and provides some
 // extra information for Ly's convenience. Ly will usually interact through a
@@ -93,5 +97,5 @@ func (ly *lyprocess) WriteLine(line string) {
 func (ly *lyprocess) WriteErrorLine(line string) {
     // todo: error lines should be written in red
     timeString := time.Now().Format("15:04:05.000 :: ")
-    ly.Log.Insert(timeString + line)
+    ly.Log.Insert(timeString + color.RedString(line))
 }
