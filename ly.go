@@ -2,9 +2,9 @@ package main
 
 // todo: add process error checking
 // todo: add check for invalid command
-// todo: add arg parsing!!
+// todo: clean up arg parsing!! (recursive?)
 // todo: add input command
-// todo: command history with arrow keys
+// todo: command history with arrow keys (not possible)
 // todo: add support for lyfiles
 
 import (
@@ -18,7 +18,7 @@ import (
 // Maps strings (names) to lyprocesses.
 var processes = make(map[string]*lyprocess)
 
-// Counter of processes that are running.
+// Counter of processes that are running to keep O(1) time.
 // This is NOT the length of the processes map. Some processes may have exited,
 // and thus are not running.
 var nRunning = 0;
@@ -66,7 +66,11 @@ func main() {
                 printOut(words[1])
             case "in":
                 // Send some input to a process
-                fmt.Println("Not implemented yet.")
+                if len(words) < 3 {
+                    fmt.Println("Not enough arguments.")
+                    break
+                }
+                sendInput(words[1], words[2:]...)
             case "list":
                 // List running processes
                 list()
@@ -88,7 +92,7 @@ func startProcess(name string, cmd ...string) {
     }
 
     cmdString := strings.Join(cmd, " ")
-    fmt.Printf("Starting %s :: %s.", name, cmdString)
+    fmt.Printf("Starting %s :: %s.\n", name, cmdString)
     processes[name] = newLyprocess(cmdString)
 
     go func() {
@@ -124,6 +128,14 @@ func printOut(name string) {
     }
 }
 
+func sendInput(name string, in ...string) {
+    if !processExists(name) {
+        fmt.Println("Process", name, "does not exist.")
+    } else {
+        processes[name].WriteInput(strings.Join(in, " "))
+    }
+}
+
 func list() {
     if len(processes) == 0 {
         fmt.Println("No processes")
@@ -131,6 +143,8 @@ func list() {
         fmt.Println(len(processes), "processes:")
 
         for k, v := range(processes) {
+            // fixme: this crashes if Process is null
+            // e.g. when the Cmd object has a typo and the command can't be run
             fmt.Printf("  %v(%v)", k, v.Cmd.Process.Pid)
             if !processRunning(k) {
                 fmt.Println(" -- Exited")

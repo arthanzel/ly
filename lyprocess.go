@@ -3,6 +3,7 @@ package main
 import (
     "bufio"
     "fmt"
+    "io"
     "os/exec"
     "time"
 )
@@ -14,8 +15,10 @@ const LOG_LENGTH = 300
 // lyprocess rather than a Cmd.
 type lyprocess struct {
     File string // The executable name
+    Argv []string
     Cmd *exec.Cmd
     Running bool
+    Input io.WriteCloser
 
     // Circular arrays stop programs that create an endless output stream from
     // eating memory.
@@ -26,11 +29,11 @@ type lyprocess struct {
 func newLyprocess(cmdString string) *lyprocess {
     ly := new(lyprocess)
 
-    ly.File = cmdString
+    ly.File, ly.Argv = argparse(cmdString)
 
     // Create the Cmd object and wire its standard out and error streams to the
     // Lyprocess object.
-    ly.Cmd = exec.Command("bash", "-c", cmdString)
+    ly.Cmd = exec.Command(ly.File, ly.Argv...)
 
     // 300 lines of output seems like a reasonable amount
     ly.Log = NewCircularArray(LOG_LENGTH)
@@ -47,8 +50,10 @@ func (ly *lyprocess) Run() {
     // error lines to the process's log.
     stdoutFile, stdoutErr := ly.Cmd.StdoutPipe()
     stderrFile, stderrErr := ly.Cmd.StderrPipe()
-    if stdoutErr != nil || stderrErr != nil {
-        fmt.Println("Couldn't start the process. Standard out/err streams are misbehaving.")
+    stdin,      stdinErr  := ly.Cmd.StdinPipe()
+    if stdoutErr != nil || stderrErr != nil || stdinErr != nil {
+        fmt.Println("Couldn't start the process. Standard streams are misbehaving.")
+        return
     }
 
     stdoutBuffer := bufio.NewReader(stdoutFile)
@@ -75,7 +80,11 @@ func (ly *lyprocess) Run() {
         }
     }()
 
+    // Set up the standard input
+    ly.Input = stdin
+
     ly.Cmd.Run()
+    ly.Input.Write([]byte("\nfoo\n"))
 }
 
 // PrintLog prints out the process's log of outputs and errors.
@@ -88,6 +97,10 @@ func (ly *lyprocess) PrintLog() {
         }
     })
     ly.UnreadLogLines = 0
+}
+
+func (ly *lyprocess) WriteInput(s string) {
+    ly.Input.Write([]byte(s + "\n"))
 }
 
 // WriteLine adds a timestamped line of text to the process's output/error log.
