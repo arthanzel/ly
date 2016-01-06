@@ -3,7 +3,6 @@ package main
 // todo: add process error checking
 // todo: add check for invalid command
 // todo: clean up arg parsing!! (recursive?)
-// todo: add input command
 // todo: command history with arrow keys (not possible)
 // todo: add support for lyfiles
 
