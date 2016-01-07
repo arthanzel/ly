@@ -4,7 +4,6 @@ package main
 // todo: add check for invalid command
 // todo: clean up arg parsing!! (recursive?)
 // todo: command history with arrow keys (not possible)
-// todo: add support for lyfiles
 
 import (
 	"bufio"
