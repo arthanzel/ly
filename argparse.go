@@ -10,6 +10,8 @@ func argparse(args string) (cmd string, argv []string) {
 
     for {
         r, _, err := reader.ReadRune()
+
+        // Error (usually EOF) indicates end of string
         if err != nil {
             if currentTerm.Length > 0 {
                 argv = append(argv, currentTerm.String())
@@ -18,6 +20,7 @@ func argparse(args string) (cmd string, argv []string) {
         }
 
         if r == ' ' {
+            // Keep spaces if inside a quoted string
             if quote {
                 currentTerm.Add(" ")
             } else if currentTerm.Length > 0 {

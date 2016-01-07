@@ -27,61 +27,72 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 
+    // Run the lyfile if the -l switch is provided
+    if len(os.Args) > 1 && os.Args[1] == "-l" {
+        runLyfile()
+    }
+
 	for {
         // Read and tokenize user input
         fmt.Print("ly > ")
 		line, _ := reader.ReadString('\n')
-		words := strings.Fields(line)
-
-        // No command given
-        if len(words) == 0 {
-            continue
-        }
-
-		switch words[0] {
-		    case "new":
-                // Start a new process
-		        if len(words) < 3 {
-		            fmt.Println("Not enough arguments.")
-		            break
-		        }
-		        startProcess(words[1], words[2:]...)
-            case "kill":
-                // Kill an existing process
-                if len(words) < 2 {
-                    fmt.Println("Not enough arguments.")
-                    break
-                }
-                killProcess(words[1])
-            case "killall":
-                fmt.Println("Attempting to kill all processes.")
-                killAllProcesses()
-            case "out":
-                // Print the output of a process
-                if len(words) < 2 {
-                    fmt.Println("Not enough arguments.")
-                    break
-                }
-                printOut(words[1])
-            case "in":
-                // Send some input to a process
-                if len(words) < 3 {
-                    fmt.Println("Not enough arguments.")
-                    break
-                }
-                sendInput(words[1], words[2:]...)
-            case "list":
-                // List running processes
-                list()
-            case "exit":
-                // Kill all processes and exit
-                exit()
-	        default:
-                printUsage()
-		}
+        runInstruction(line)
 
         fmt.Println()
 	}
+}
+
+func runInstruction(instr string) {
+    words := strings.Fields(instr)
+
+    // No command given
+    if len(words) == 0 {
+        return
+    }
+
+    switch words[0] {
+        case "new":
+            // Start a new process
+            if len(words) < 3 {
+                fmt.Println("Not enough arguments.")
+                break
+            }
+            startProcess(words[1], words[2:]...)
+        case "kill":
+            // Kill an existing process
+            if len(words) < 2 {
+                fmt.Println("Not enough arguments.")
+                break
+            }
+            killProcess(words[1])
+        case "killall":
+            fmt.Println("Attempting to kill all processes.")
+            killAllProcesses()
+        case "out":
+            // Print the output of a process
+            if len(words) < 2 {
+                fmt.Println("Not enough arguments.")
+                break
+            }
+            printOut(words[1])
+        case "in":
+            // Send some input to a process
+            if len(words) < 3 {
+                fmt.Println("Not enough arguments.")
+                break
+            }
+            sendInput(words[1], words[2:]...)
+        case "list":
+            // List running processes
+            list()
+        case "lyfile":
+            runLyfile()
+        case "exit":
+            // Kill all processes and exit
+            exit()
+        default:
+            printUsage()
+    }
 }
 
 func startProcess(name string, cmd ...string) {
@@ -114,7 +125,7 @@ func killAllProcesses() {
 func killProcess(name string) {
     if !processExists(name) {
         fmt.Println("Process", name, "does not exist.")
-    } else {
+    } else if processes[name].Cmd.Process != nil {
         processes[name].Cmd.Process.Kill()
     }
 }
@@ -142,13 +153,16 @@ func list() {
         fmt.Println(len(processes), "processes:")
 
         for k, v := range(processes) {
-            // fixme: this crashes if Process is null
-            // e.g. when the Cmd object has a typo and the command can't be run
-            fmt.Printf("  %v(%v)", k, v.Cmd.Process.Pid)
-            if !processRunning(k) {
-                fmt.Println(" -- Exited")
+            // Don't print the PID if the process isn't started
+            if v.Cmd.Process == nil {
+                fmt.Printf("  %v(-)\n", k)
             } else {
-                fmt.Println()
+                fmt.Printf("  %v(%v)", k, v.Cmd.Process.Pid)
+                if !processRunning(k) {
+                    fmt.Println(" -- Exited")
+                } else {
+                    fmt.Println()
+                }
             }
         }
     }
@@ -182,6 +196,7 @@ func exit() {
 func printUsage() {
     helpStr := `Usage: <operation> [arguments]
 Operations:
+    lyfile                  Runs commands from 'Lyfile' or 'lyfile'.
     new <name> <command>    Spawns a new process called <name> by running <command>.
                             All processes are started in their own shell.
     kill <name>             Kills a running process by <name>
@@ -189,7 +204,9 @@ Operations:
     out <name>              Outputs the most recent standard output/error for a process.
     list                    Lists running processes with their PID and status.
     exit                    Nicely quits all processes and exists.
-    help                    Prints this help message.`
+    help                    Prints this help message.
+
+Run ly with the -l switch to automatically run the lyfile.`
 
     fmt.Println(helpStr)
 }
