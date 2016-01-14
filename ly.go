@@ -4,6 +4,8 @@ package main
 // todo: add check for invalid command
 // todo: clean up arg parsing!! (recursive?)
 // todo: command history with arrow keys (not possible)
+// todo: output unread lines after input (delay?)
+// todo: output unread lines in list
 
 import (
 	"bufio"
