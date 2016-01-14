@@ -22,7 +22,7 @@ type lyprocess struct {
 
     // Circular arrays stop programs that create an endless output stream from
     // eating memory.
-    Log *CircularArray
+    Log *CircularStringArray
     UnreadLogLines int
 }
 
@@ -36,7 +36,7 @@ func newLyprocess(cmdString string) *lyprocess {
     ly.Cmd = exec.Command(ly.File, ly.Argv...)
 
     // 300 lines of output seems like a reasonable amount
-    ly.Log = NewCircularArray(LOG_LENGTH)
+    ly.Log = NewCircularStringArray(LOG_LENGTH)
     ly.UnreadLogLines = 0
 
     ly.Running = false
@@ -89,9 +89,9 @@ func (ly *lyprocess) Run() {
 
 // PrintLog prints out the process's log of outputs and errors.
 func (ly *lyprocess) PrintLog() {
-    ly.Log.Do(func(i int, line interface{}) {
+    ly.Log.Do(func(i int, line string) {
         if i < ly.Log.Length - ly.UnreadLogLines {
-            fmt.Println(greyString(line.(string)))
+            fmt.Println(greyString(line))
         } else {
             fmt.Println(line)
         }
