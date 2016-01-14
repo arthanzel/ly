@@ -5,7 +5,6 @@ package main
 // todo: clean up arg parsing!! (recursive?)
 // todo: command history with arrow keys (not possible)
 // todo: output unread lines after input (delay?)
-// todo: output unread lines in list
 
 import (
 	"bufio"
@@ -153,13 +152,23 @@ func list() {
     } else {
         fmt.Println(len(processes), "processes:")
 
-        for k, v := range(processes) {
+        for processName, lyproc := range(processes) {
             // Don't print the PID if the process isn't started
-            if v.Cmd.Process == nil {
-                fmt.Printf("  %v(-)\n", k)
+            if lyproc.Cmd.Process == nil {
+                fmt.Printf("  %v(-)\n", processName)
             } else {
-                fmt.Printf("  %v(%v)", k, v.Cmd.Process.Pid)
-                if !processRunning(k) {
+                // Name and PID notification
+                fmt.Printf("  %v(%v)", processName, lyproc.Cmd.Process.Pid)
+
+                // Unread messages notification
+                if lyproc.UnreadLogLines > 1 {
+                    fmt.Printf(yellowString("  %v new message"), lyproc.UnreadLogLines)
+                } else if lyproc.UnreadLogLines == 1 {
+                    fmt.Print(yellowString("  1 new message"))
+                }
+
+                // Exited notification
+                if !processRunning(processName) {
                     fmt.Println(" -- Exited")
                 } else {
                     fmt.Println()
